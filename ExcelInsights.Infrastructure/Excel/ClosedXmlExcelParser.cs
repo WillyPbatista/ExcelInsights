@@ -1,3 +1,5 @@
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelInsights.Application.Contracts;
 using ExcelInsights.Domain.Entities;
 
@@ -11,8 +13,27 @@ public class ClosedXmlExcelParser : IExcelParser
 {
     public Task<ExcelFile> ParseAsync(Stream fileStream, string fileName)
     {
-        // Issue 2: aquí irá la lógica con ClosedXML para leer
-        // las filas y columnas del archivo Excel.
-        throw new NotImplementedException("Implementar en Issue 2 con ClosedXML.");
+        var excelFile = new XLWorkbook(fileStream);
+
+        var worksheet = excelFile.Worksheets.FirstOrDefault();
+
+        var usedRows = worksheet.RowsUsed();
+
+        var columns = worksheet.Row(1).CellsUsed();
+        foreach (var column in columns)
+        {
+            Console.WriteLine($"Columna: {column.Value}");
+        }
+        
+        Console.WriteLine($"Archivo '{fileName}' parseado con éxito. Total de filas usadas: {usedRows.Count()}. y el archivo tiene {columns.Count()} columnas.");
+        var parsedExcel = new ExcelFile
+        {
+            FileName = fileName,
+            TotalRows = usedRows.Count(),
+            //Columns = columns.ToList<Column>()
+
+        };
+        return Task.FromResult(parsedExcel);
+        
     }
 }

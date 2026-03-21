@@ -87,8 +87,10 @@ public sealed class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, A
         //
         // La lógica real se verá así (no implementar todavía):
         //
-        //   var excelFile = await _excelParser.ParseAsync(
-        //       request.FileStream, request.FileName, cancellationToken);
+        var excelFile = await _excelParser.ParseAsync(
+       request.FileStream, request.FileName);
+
+       Console.WriteLine($"Archivo '{request.FileName}' parseado con éxito.");
         //
         //   foreach (var column in excelFile.Columns)
         //       column.SetInferredType(_columnInferrer.Infer(column.Values));
