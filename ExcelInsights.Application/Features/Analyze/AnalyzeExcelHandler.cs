@@ -1,28 +1,18 @@
-/// <summary>
-/// HANDLER — AnalyzeExcelHandler
-///
-/// El Handler es quien sabe CÓMO responder a un Command.
-/// Es el orquestador: no hace el trabajo pesado directamente,
-/// sino que llama a los contratos (interfaces) en el orden correcto.
-///
-/// Implementa IRequestHandler<TRequest, TResponse>:
-///   - TRequest = AnalyzeExcelCommand  (el mensaje que escucha)
-///   - TResponse = AnalysisResult      (lo que devuelve)
-///
-/// MediatR conecta automáticamente este Handler con su Command
-/// porque los tipos genéricos coinciden. No hay mapeo manual.
-///
-/// PRINCIPIO CLAVE — este Handler sigue SRP (Single Responsibility):
-///   - NO parsea el Excel       → eso es IExcelParser
-///   - NO infiere tipos         → eso es IColumnInferrer
-///   - NO valida filas          → eso es IValidationEngine
-///   - NO genera estadísticas   → eso es ColumnStats en Domain
-///   Solo ORQUESTA el flujo llamando a cada pieza en orden.
-///
-/// EN ISSUE 1: el método Handle devuelve un resultado vacío (stub).
-/// Las llamadas reales a los contratos se implementan en Issues 2-4.
-/// El objetivo ahora es verificar que el cableado de MediatR funciona.
-/// </summary>
+// =============================================================================
+// AnalyzeExcelHandler.cs — Application/Features/Analyze/
+// =============================================================================
+//
+// CAMBIOS EN ESTE COMMIT (Issue 2):
+//   - Se descomenta y activa la llamada a _excelParser.ParseAsync()
+//   - AnalysisResult ahora refleja datos reales: fileName, totalRows, columnas
+//   - Los TODO de Issue 2 se eliminan
+//   - Los TODO de Issue 3 (inferencia) y Issue 4 (validación) se mantienen
+//
+// QUÉ SIGUE SIENDO STUB:
+//   - InferredType = "Unknown" — Issue 3 lo resolverá
+//   - Errors vacío            — Issue 4 lo resolverá
+//   - Stats nulas             — Issue 5 lo resolverá
+// =============================================================================
 
 using MediatR;
 using ExcelInsights.Application.Contracts;
@@ -30,23 +20,8 @@ using ExcelInsights.Application.DTOs;
 
 namespace ExcelInsights.Application.Features.Analyze;
 
-/// <summary>
-/// Maneja la solicitud de análisis de un archivo Excel.
-/// Recibe el Command, orquesta los servicios y devuelve el resultado.
-/// </summary>
-public sealed class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, AnalysisResult>
+public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, AnalysisResult>
 {
-    // -------------------------------------------------------------------------
-    // DEPENDENCIAS — se inyectan por constructor (Dependency Injection)
-    //
-    // El Handler no instancia estos servicios con "new". Le pide al DI container
-    // que se los provea. Así el Handler no está acoplado a ninguna implementación
-    // concreta — solo conoce los contratos (interfaces).
-    //
-    // Cuando el DI container construye este Handler, busca qué clase concreta
-    // está registrada para cada interfaz y la inyecta automáticamente.
-    // -------------------------------------------------------------------------
-
     private readonly IExcelParser _excelParser;
     private readonly IColumnInferrer _columnInferrer;
     private readonly IValidationEngine _validationEngine;
@@ -56,62 +31,57 @@ public sealed class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, A
         IColumnInferrer columnInferrer,
         IValidationEngine validationEngine)
     {
-        _excelParser = excelParser;
-        _columnInferrer = columnInferrer;
-        _validationEngine = validationEngine;
+        _excelParser       = excelParser;
+        _columnInferrer    = columnInferrer;
+        _validationEngine  = validationEngine;
     }
 
-    /// <summary>
-    /// Método principal — MediatR lo invoca automáticamente cuando
-    /// alguien hace sender.Send(AnalyzeExcelCommand).
-    ///
-    /// Parámetros:
-    ///   request            → el Command con el Stream y el FileName
-    ///   cancellationToken  → permite cancelar la operación si el cliente
-    ///                        cierra la conexión antes de que termine
-    /// </summary>
     public async Task<AnalysisResult> Handle(
-        AnalyzeExcelCommand request,
+        AnalyzeExcelCommand command,
         CancellationToken cancellationToken)
     {
-        // -----------------------------------------------------------------
-        // STUB — Issue 1
-        //
-        // Por ahora devolvemos un AnalysisResult vacío para verificar
-        // que el pipeline completo funciona:
-        //   Endpoint → MediatR → Handler → Respuesta
-        //
-        // En Issue 2 reemplazamos este stub con la llamada real a _excelParser.
-        // En Issue 3 agregamos _columnInferrer y _validationEngine.
-        // En Issue 4 calculamos estadísticas reales.
-        //
-        // La lógica real se verá así (no implementar todavía):
-        //
-        var excelFile = await _excelParser.ParseAsync(
-       request.FileStream, request.FileName);
+        // ── ISSUE 2 ── ACTIVO ────────────────────────────────────────────────
+        // Parseamos el Excel real. El parser extrae headers, filas y columnas
+        // como strings crudos sin interpretar tipos ni validar nada.
+        var excelFile = await _excelParser.ParseAsync(command.FileStream, command.FileName);
 
-       Console.WriteLine($"Archivo '{request.FileName}' parseado con éxito.");
-        //
-        //   foreach (var column in excelFile.Columns)
-        //       column.SetInferredType(_columnInferrer.Infer(column.Values));
-        //
-        //   var errors = excelFile.Rows
-        //       .SelectMany(row => _validationEngine.Validate(row, excelFile.Columns))
-        //       .ToList();
-        //
-        //   return MapToResult(excelFile, errors);
-        // -----------------------------------------------------------------
+        // ── ISSUE 3 ── TODO ──────────────────────────────────────────────────
+        // Inferir el tipo de cada columna analizando sus valores.
+        // foreach (var column in excelFile.Columns)
+        //     column.SetInferredType(_columnInferrer.Infer(column.Values));
 
-        await Task.CompletedTask; // eliminar cuando haya lógica async real
+        // ── ISSUE 4 ── TODO ──────────────────────────────────────────────────
+        // Validar cada fila según el tipo inferido de cada columna.
+        // var errors = excelFile.Rows
+        //     .SelectMany(row => _validationEngine.Validate(row, excelFile.Columns))
+        //     .ToList();
 
+        // ── ISSUE 5 ── TODO ──────────────────────────────────────────────────
+        // Calcular estadísticas por columna (avg, min, max, nulls).
+
+        // ── RESPUESTA ────────────────────────────────────────────────────────
+        // Con el parser activo, fileName y totalRows son datos reales.
+        // Columns muestra los nombres reales de cada columna del Excel.
+        // InferredType sigue en "Unknown" hasta Issue 3.
+        // Errors sigue vacío hasta Issue 4.
         return new AnalysisResult
         {
-            FileName = request.FileName,
-            TotalRows = 0,
-            ValidRows = 0,
+            FileName    = excelFile.FileName,
+            TotalRows   = excelFile.TotalRows,
+            ValidRows   = excelFile.TotalRows,  // todos "válidos" hasta Issue 4
             InvalidRows = 0,
-            Columns = [],
-            Errors = []
+
+            // Mapeamos cada ColumnDefinition del Domain al DTO ColumnSummary.
+            // Las entidades del Domain (ColumnDefinition) nunca salen de Application —
+            // el cliente solo ve el DTO.
+            Columns = excelFile.Columns.Select(c => new ColumnSummary
+            {
+                Name         = c.Name,
+                InferredType = "Unknown",  // Issue 3
+                Confidence   = 0           // Issue 3
+            }).ToList(),
+
+            Errors = new List<RowErrorDto>()  // Issue 4
         };
     }
 }
