@@ -20,12 +20,25 @@ public class ClosedXmlExcelParser : IExcelParser
         var usedRows = worksheet.RowsUsed();
 
         var columns = worksheet.Row(1).CellsUsed();
+        var rows =  worksheet.RowsUsed().Skip(1); // Omitimos la primera fila que se asume es el encabezado
+
+        foreach (var row in rows)
+        {
+            Console.WriteLine($"Fila: {row.RowNumber()}");
+            foreach (var cell in row.CellsUsed())
+            {
+                Console.WriteLine($"  Celda: {cell.Address} - Valor: {cell.Value}");
+            }
+        }
+
         foreach (var column in columns)
         {
             Console.WriteLine($"Columna: {column.Value}");
         }
         
         Console.WriteLine($"Archivo '{fileName}' parseado con éxito. Total de filas usadas: {usedRows.Count()}. y el archivo tiene {columns.Count()} columnas.");
+
+
         var parsedExcel = new ExcelFile
         {
             FileName = fileName,
