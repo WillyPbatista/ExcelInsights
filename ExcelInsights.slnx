@@ -3,4 +3,5 @@
   <Project Path="ExcelInsights.Application/ExcelInsights.Application.csproj" />
   <Project Path="ExcelInsights.Domain/ExcelInsights.Domain.csproj" />
   <Project Path="ExcelInsights.Infrastructure/ExcelInsights.Infrastructure.csproj" />
+  <Project Path="ExcelInsights.Tests/ExcelInsights.Tests.csproj" />
 </Solution>
