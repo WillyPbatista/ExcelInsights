@@ -11,8 +11,7 @@ public class ColumnInferrerService : IColumnInferrer
 {
     public InferredType Infer(IEnumerable<string> values)
     {
-        // Issue 3: aquí irá la lógica de votación para detectar
-        // si la columna es Email, Integer, Date, etc.
+        
         throw new NotImplementedException("Implementar en Issue 3.");
     }
 }
