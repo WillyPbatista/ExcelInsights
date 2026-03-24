@@ -1,10 +1,10 @@
-using ExcelInsigths.Enums.Entities;
 
-namespace ExcelInsights.Domain.ValueObjects
+using ExcelInsights.Enums.Entities;
+
+namespace ExcelInsights.Domain.ValueObjects;
+
+public record InferredType(DataType DataType, double Confidence)
 {
-    public class InferredType
-    {
-        public DataType DataType { get; set; }
-        public double Confidence { get; set; }
-    }
+    public static InferredType Unknown()
+        => new InferredType(DataType.Unknown, 0.0);
 }

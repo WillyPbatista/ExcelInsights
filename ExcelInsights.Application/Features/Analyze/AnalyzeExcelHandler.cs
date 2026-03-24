@@ -31,9 +31,9 @@ public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, Analysis
         IColumnInferrer columnInferrer,
         IValidationEngine validationEngine)
     {
-        _excelParser       = excelParser;
-        _columnInferrer    = columnInferrer;
-        _validationEngine  = validationEngine;
+        _excelParser = excelParser;
+        _columnInferrer = columnInferrer;
+        _validationEngine = validationEngine;
     }
 
     public async Task<AnalysisResult> Handle(
@@ -45,10 +45,13 @@ public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, Analysis
         // como strings crudos sin interpretar tipos ni validar nada.
         var excelFile = await _excelParser.ParseAsync(command.FileStream, command.FileName);
 
-        // ── ISSUE 3 ── TODO ──────────────────────────────────────────────────
-        // Inferir el tipo de cada columna analizando sus valores.
-        // foreach (var column in excelFile.Columns)
-        //     column.SetInferredType(_columnInferrer.Infer(column.Values));
+        // ── ISSUE 3 ── ACTIVO ────────────────────────────────────────────────
+        // Infiere el tipo de cada columna analizando sus valores por votación.
+
+        foreach (var column in excelFile.Columns)
+        {
+            column.SetInferredType(_columnInferrer.Infer(column.Values));
+        }
 
         // ── ISSUE 4 ── TODO ──────────────────────────────────────────────────
         // Validar cada fila según el tipo inferido de cada columna.
@@ -66,9 +69,9 @@ public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, Analysis
         // Errors sigue vacío hasta Issue 4.
         return new AnalysisResult
         {
-            FileName    = excelFile.FileName,
-            TotalRows   = excelFile.TotalRows,
-            ValidRows   = excelFile.TotalRows,  // todos "válidos" hasta Issue 4
+            FileName = excelFile.FileName,
+            TotalRows = excelFile.TotalRows,
+            ValidRows = excelFile.TotalRows,  // todos "válidos" hasta Issue 4
             InvalidRows = 0,
 
             // Mapeamos cada ColumnDefinition del Domain al DTO ColumnSummary.
@@ -76,9 +79,9 @@ public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, Analysis
             // el cliente solo ve el DTO.
             Columns = excelFile.Columns.Select(c => new ColumnSummary
             {
-                Name         = c.Name,
-                InferredType = "Unknown",  // Issue 3
-                Confidence   = 0           // Issue 3
+                Name = c.Name,
+                InferredType = c.InferredType.DataType.ToString(),  // ← lee el tipo real
+                Confidence = c.InferredType.Confidence            // ← lee la confianza real
             }).ToList(),
 
             Errors = new List<RowErrorDto>()  // Issue 4

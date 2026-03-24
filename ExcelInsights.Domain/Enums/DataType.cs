@@ -1,4 +1,4 @@
-namespace ExcelInsigths.Enums.Entities
+namespace ExcelInsights.Enums.Entities
 {
     public enum DataType
     {
@@ -10,6 +10,6 @@ namespace ExcelInsigths.Enums.Entities
         Integer,
         Decimal,    
         FreeText,
-        Unkwown
+        Unknown
     }
 }
