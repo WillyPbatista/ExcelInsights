@@ -1,21 +1,36 @@
 using ExcelInsights.Application.Contracts;
 using ExcelInsights.Domain.Entities;
-using ExcelInsights.Domain.ValueObjects;
+using ExcelInsights.Infrastructure.Excel.Rules;
 using ExcelInsigths.Domain.ValueObjects;
 
 namespace ExcelInsights.Infrastructure.Excel;
-
-/// <summary>
-/// Implementación del motor de validación.
-/// STUB — Issue 1. La lógica real se implementa en Issue 4.
-/// </summary>
 public class ValidationEngine : IValidationEngine
 {
-
-    IEnumerable<ValidationError> IValidationEngine.Validate(RowData row, IEnumerable<ColumnDefinition> columns)
+    private readonly IEnumerable<IValidationRule> _rules;
+    public ValidationEngine(IEnumerable<IValidationRule> rules)
     {
-        // Issue 4: aquí irán las reglas de validación por tipo
-        // (NegativeNumberRule, InvalidEmailRule, NullValueRule, etc.)
-        throw new NotImplementedException("Implementar en Issue 4.");
+        _rules = rules;
+
+    }
+
+
+    public IEnumerable<ValidationError> Validate(RowData row, IEnumerable<ColumnDefinition> columns)
+    {
+        var errors = new List<ValidationError>();
+        foreach (var column in columns)
+        {
+            var cellValue = row.Cells.TryGetValue(column.Name, out var value) ? value : string.Empty;
+
+            foreach (var rule in _rules)
+            {
+                var error = rule.Validate(cellValue, column, row.RowIndex);
+                if (error != null)
+                {
+                    errors.Add(error);
+                }
+            }
+        }
+        return errors;
+
     }
 }
