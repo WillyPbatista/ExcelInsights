@@ -13,7 +13,7 @@ namespace ExcelInsights.Domain.Services
             var uniqueCount = nonEmpty.Distinct().Count();
 
 
-            if (column.InferredType.DataType == Enums.Entities.DataType.Number || column.InferredType.DataType == Enums.Entities.DataType.Decimal)
+            if (column.InferredType.DataType == Enums.Entities.DataType.Integer || column.InferredType.DataType == Enums.Entities.DataType.Decimal)
             {
                 var parsed = new List<decimal>();
 
@@ -24,8 +24,8 @@ namespace ExcelInsights.Domain.Services
                 }
                 return new ColumnStats
                 {
-                    Min = parsed.Min(),
-                    Max = parsed.Max(),
+                    Min = parsed.Count > 0 ? parsed.Min() : null,
+                    Max = parsed.Count > 0 ? parsed.Max() : null,
                     Average = parsed.Count > 0 ? (double)parsed.Average() : null,
                     NullCount = nullCount,
                     UniqueCount = uniqueCount

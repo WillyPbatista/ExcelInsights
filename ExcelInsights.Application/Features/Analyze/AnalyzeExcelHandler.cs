@@ -42,6 +42,10 @@ public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, Analysis
         var invalidRowCount = errors.DistinctBy(e => e.RowIndex).Count();
         var validRowCount   = excelFile.TotalRows - invalidRowCount;
 
+        foreach (var column in excelFile.Columns)
+            column.Stats = Domain.Services.StatisticsService.Calculate(column);
+            
+
 
         return new AnalysisResult
         {
@@ -54,7 +58,8 @@ public class AnalyzeExcelHandler : IRequestHandler<AnalyzeExcelCommand, Analysis
             {
                 Name         = c.Name,
                 InferredType = c.InferredType.DataType.ToString(),
-                Confidence   = c.InferredType.Confidence
+                Confidence   = c.InferredType.Confidence,
+                Stats        = c.Stats
             }).ToList(),
 
             Errors = errors.Select(e => new RowErrorDto

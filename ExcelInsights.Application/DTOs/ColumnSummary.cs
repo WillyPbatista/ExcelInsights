@@ -8,5 +8,6 @@ namespace ExcelInsights.Application.DTOs
         public string InferredType { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public ColumnStats Stats { get; set; } = new ColumnStats();
+
     }
 }
