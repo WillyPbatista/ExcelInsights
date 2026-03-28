@@ -30,6 +30,7 @@ using ExcelInsights.Api.Endpoints;
 using ExcelInsights.Api.Middlewares;
 using ExcelInsights.Application;
 using ExcelInsights.Infrastructure;
+using QuestPDF.Infrastructure;
 
 // =============================================================================
 // FASE 1: CONSTRUCCIÓN DEL DI CONTAINER
@@ -57,6 +58,8 @@ object value = builder.Services.AddSwaggerGen();
 // =============================================================================
 // FASE 2: PIPELINE Y ARRANQUE
 // =============================================================================
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 
