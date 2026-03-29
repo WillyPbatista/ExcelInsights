@@ -29,6 +29,7 @@
 using ExcelInsights.Api.Endpoints;
 using ExcelInsights.Api.Middlewares;
 using ExcelInsights.Application;
+using ExcelInsights.Application.Common;
 using ExcelInsights.Infrastructure;
 using QuestPDF.Infrastructure;
 
@@ -54,6 +55,13 @@ builder.Services.AddTransient<GlobalExceptionMiddleware>();
 // para probar los endpoints en /swagger durante desarrollo.
 builder.Services.AddEndpointsApiExplorer();
 object value = builder.Services.AddSwaggerGen();
+
+builder.Services.Configure<ExcelInsightsSettings>(
+builder.Configuration.GetSection("ExcelInsights"));
+// Configura Kestrel para aceptar archivos grandes según el límite definido en settings.
+var maxBytes = builder.Configuration.GetValue<long>("ExcelInsightsSettings:MaxFileSizeBytes");
+builder.WebHost.ConfigureKestrel(options =>
+options.Limits.MaxRequestBodySize = maxBytes);
 
 // =============================================================================
 // FASE 2: PIPELINE Y ARRANQUE
