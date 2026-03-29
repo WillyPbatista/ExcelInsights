@@ -68,14 +68,6 @@ public class ReportDocumentBuilder : IDocument
         _result = result;
     }
 
-    // -------------------------------------------------------------------------
-    // INTERFAZ IDocument
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Metadatos del documento PDF — título, autor, fecha de creación.
-    /// QuestPDF los incluye en las propiedades del archivo PDF.
-    /// </summary>
     public DocumentMetadata GetMetadata() => new DocumentMetadata
     {
         Title   = $"Excel Insights Report — {_result.FileName}",
@@ -83,10 +75,6 @@ public class ReportDocumentBuilder : IDocument
         Subject = "Data Analysis Report"
     };
 
-    /// <summary>
-    /// Punto de entrada que QuestPDF llama para construir el documento.
-    /// Define la página y delega cada sección a un método privado.
-    /// </summary>
     public void Compose(IDocumentContainer container)
     {
         container.Page(page =>
@@ -95,8 +83,6 @@ public class ReportDocumentBuilder : IDocument
             page.Margin(40);
             page.PageColor(Colors.White);
 
-            // Estilo de texto base para todo el documento.
-            // Cada elemento puede sobrescribir esto con su propio estilo.
             page.DefaultTextStyle(x => x
                 .FontSize(10)
                 .FontColor(DarkGrey));
@@ -114,14 +100,7 @@ public class ReportDocumentBuilder : IDocument
         });
     }
 
-    // -------------------------------------------------------------------------
-    // HEADER — título, nombre del archivo, fecha, badge
-    // -------------------------------------------------------------------------
 
-    /// <summary>
-    /// Zona superior del PDF: título a la izquierda, badge a la derecha.
-    /// Usa Row para poner los dos elementos lado a lado.
-    /// </summary>
     private void ComposeHeader(IContainer container)
     {
         container
@@ -130,7 +109,7 @@ public class ReportDocumentBuilder : IDocument
             .BorderColor(ExcelGreen)
             .Row(row =>
             {
-                // Lado izquierdo — título y metadatos del archivo
+
                 row.RelativeItem().Column(col =>
                 {
                     col.Item()
@@ -139,7 +118,7 @@ public class ReportDocumentBuilder : IDocument
                         .SemiBold()
                         .FontColor(ExcelGreen);
 
-                    // Nombre del archivo real — viene de _result
+
                     col.Item()
                         .PaddingTop(2)
                         .Text($"File: {_result.FileName}")
@@ -153,17 +132,13 @@ public class ReportDocumentBuilder : IDocument
                         .FontColor(Colors.Grey.Darken1);
                 });
 
-                // Lado derecho — badge de estado
+
                 row.ConstantItem(90)
                     .AlignRight()
                     .AlignMiddle()
                     .StatusBadge(_result.InvalidRows == 0 ? "CLEAN" : "ISSUES FOUND");
             });
     }
-
-    // -------------------------------------------------------------------------
-    // FOOTER — número de página
-    // -------------------------------------------------------------------------
 
     private void ComposeFooter(IContainer container)
     {
@@ -187,15 +162,6 @@ public class ReportDocumentBuilder : IDocument
                 });
             });
     }
-
-    // -------------------------------------------------------------------------
-    // SECCIÓN 1 — Resumen general con totales reales
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Muestra TotalRows, ValidRows e InvalidRows con datos reales de _result.
-    /// Usa un Row con tres columnas iguales para distribuir los números.
-    /// </summary>
     private void BuildSummarySection(ColumnDescriptor column)
     {
         column.Item().Column(inner =>
@@ -216,10 +182,6 @@ public class ReportDocumentBuilder : IDocument
         });
     }
 
-    /// <summary>
-    /// Un bloque de métrica individual: etiqueta arriba, número grande abajo.
-    /// Se reutiliza tres veces en el summary.
-    /// </summary>
     private static void ComposeSummaryMetric(IContainer container, string label, string value, string valueColor)
     {
         container.AlignCenter().Column(col =>
@@ -236,16 +198,6 @@ public class ReportDocumentBuilder : IDocument
                 .FontColor(valueColor);
         });
     }
-
-    // -------------------------------------------------------------------------
-    // SECCIÓN 2 — Tabla de estadísticas por columna
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Tabla con una fila por cada columna del Excel analizado.
-    /// Muestra: nombre, tipo inferido, confianza, avg, min, max, nulls, únicos.
-    /// Si Average/Min/Max son null (columna no numérica), muestra "—".
-    /// </summary>
     private void BuildStatisticsSection(ColumnDescriptor column)
     {
         column.Item().Column(inner =>
@@ -254,9 +206,7 @@ public class ReportDocumentBuilder : IDocument
 
             inner.Item().PaddingTop(8).Table(table =>
             {
-                // ── Definición de anchos de columna ──────────────────────────
-                // RelativeColumn(N) = N partes del ancho disponible
-                // Los números más importantes (Name, Type) tienen más espacio
+
                 table.ColumnsDefinition(cols =>
                 {
                     cols.RelativeColumn(3);  // Name
@@ -269,15 +219,14 @@ public class ReportDocumentBuilder : IDocument
                     cols.RelativeColumn(1);  // Unique
                 });
 
-                // ── Header de la tabla ───────────────────────────────────────
+
                 table.Header(header =>
                 {
                     var headers = new[] { "Column", "Type", "Conf.", "Average", "Min", "Max", "Nulls", "Unique" };
 
                     foreach (var h in headers)
                     {
-                        // IContainer local para el estilo del header
-                        // Background verde Excel + texto blanco + padding
+
                         header.Cell()
                             .Background(ExcelGreen)
                             .PaddingHorizontal(5)
@@ -289,25 +238,22 @@ public class ReportDocumentBuilder : IDocument
                     }
                 });
 
-                // ── Filas de datos — una por cada columna del Excel ──────────
-                // QuestPDF llena la tabla de izquierda a derecha, fila a fila.
-                // No necesitas indicar posición — solo agrega celdas en orden.
                 var isOddRow = false;
                 foreach (var col in _result.Columns)
                 {
-                    // Alternamos el fondo para mejorar la legibilidad (zebra striping)
+
                     isOddRow = !isOddRow;
                     var rowBg = isOddRow ? Colors.White : Colors.Grey.Lighten4;
 
                     var stats = col.Stats;
 
-                    // Formateamos los valores — "—" si son null (columna no numérica)
+
                     var avg    = stats?.Average.HasValue == true ? stats.Average.Value.ToString("F1") : "—";
                     var min    = stats?.Min.HasValue     == true ? stats.Min.Value.ToString()          : "—";
                     var max    = stats?.Max.HasValue     == true ? stats.Max.Value.ToString()          : "—";
                     var nulls  = stats?.NullCount.ToString()  ?? "—";
                     var unique = stats?.UniqueCount.ToString() ?? "—";
-                    var conf   = $"{col.Confidence:P0}";  // "94%" en lugar de "0.94"
+                    var conf   = $"{col.Confidence:P0}"; 
 
                     var cellValues = new[] { col.Name, col.InferredType, conf, avg, min, max, nulls, unique };
 
@@ -327,15 +273,7 @@ public class ReportDocumentBuilder : IDocument
         });
     }
 
-    // -------------------------------------------------------------------------
-    // SECCIÓN 3 — Tabla de errores detectados
-    // -------------------------------------------------------------------------
 
-    /// <summary>
-    /// Si hay errores: tabla con RowIndex, ColumnName, Message y Severity.
-    /// Las filas de Error se muestran en rojo, las de Warning en naranja.
-    /// Si no hay errores: mensaje verde de "No errors detected".
-    /// </summary>
     private void BuildErrorsSection(ColumnDescriptor column)
     {
         column.Item().Column(inner =>
@@ -381,15 +319,15 @@ public class ReportDocumentBuilder : IDocument
                     }
                 });
 
-                // Filas de errores — iteramos _result.Errors reales
+
                 foreach (var error in _result.Errors)
                 {
-                    // Color según severidad: Error = rojo, Warning = naranja
+   
                     var severityColor = error.Severity == "Error"
                         ? ErrorRed
                         : WarningAmber;
 
-                    // Las primeras 3 celdas (Row, Column, Message) en color neutro
+
                     var dataCells = new[] { error.RowIndex.ToString(), error.ColumnName, error.Message };
                     foreach (var val in dataCells)
                     {
@@ -417,16 +355,6 @@ public class ReportDocumentBuilder : IDocument
         });
     }
 
-    // -------------------------------------------------------------------------
-    // COMPONENTE REUTILIZABLE — header de sección
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Título de sección con borde inferior verde.
-    /// Se usa como Action<IContainer> para pasarlo a Element().
-    /// Recibe el container directamente en lugar de devolverlo
-    /// para evitar problemas de encadenamiento con QuestPDF.
-    /// </summary>
     private static void ComposeSectionHeader(IContainer container, string title)
     {
         container
@@ -440,21 +368,10 @@ public class ReportDocumentBuilder : IDocument
     }
 }
 
-// =============================================================================
-// EXTENSIÓN — StatusBadge
-// =============================================================================
-//
-// Extension method sobre IContainer para el badge del header.
-// Vive en el mismo archivo porque solo se usa aquí — si en el futuro
-// se usa en más lugares, se mueve a su propio archivo de extensiones.
-// =============================================================================
+
 
 public static class ContainerExtensions
 {
-    /// <summary>
-    /// Badge de estado en la esquina superior derecha del header.
-    /// Verde oscuro si está limpio, rojo si tiene errores.
-    /// </summary>
     public static void StatusBadge(this IContainer container, string text)
     {
         var bgColor = text == "CLEAN" ? "#217346" : "#C0392B";

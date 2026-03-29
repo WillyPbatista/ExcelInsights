@@ -2,6 +2,7 @@
 
 using System.Net;
 using System.Text.Json;
+using ExcelInsights.Domain;
 
 namespace ExcelInsights.Api.Middlewares;
 
@@ -33,9 +34,11 @@ public class GlobalExceptionMiddleware : IMiddleware
     {
         var statusCode = ex switch
         {
-            NotImplementedException => HttpStatusCode.NotImplemented,    
-            ArgumentException       => HttpStatusCode.BadRequest,         
-            _                       => HttpStatusCode.InternalServerError 
+            InvalidExcelFileException => HttpStatusCode.BadRequest,
+            ExcelTooLargeException    => HttpStatusCode.UnprocessableEntity,
+            ArgumentException         => HttpStatusCode.BadRequest,
+            NotImplementedException   => HttpStatusCode.NotImplemented,
+            _                         => HttpStatusCode.InternalServerError
         };
 
         var errorResponse = new

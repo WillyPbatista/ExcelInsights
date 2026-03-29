@@ -31,6 +31,7 @@ using ExcelInsights.Api.Middlewares;
 using ExcelInsights.Application;
 using ExcelInsights.Application.Common;
 using ExcelInsights.Infrastructure;
+using Microsoft.Extensions.Options;
 using QuestPDF.Infrastructure;
 
 // =============================================================================
@@ -57,7 +58,9 @@ builder.Services.AddEndpointsApiExplorer();
 object value = builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<ExcelInsightsSettings>(
-builder.Configuration.GetSection("ExcelInsights"));
+builder.Configuration.GetSection("ExcelInsightsSettings"));
+// Registra ExcelInsightsSettings como singleton para inyección directa
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ExcelInsightsSettings>>().Value);
 // Configura Kestrel para aceptar archivos grandes según el límite definido en settings.
 var maxBytes = builder.Configuration.GetValue<long>("ExcelInsightsSettings:MaxFileSizeBytes");
 builder.WebHost.ConfigureKestrel(options =>
